@@ -3,6 +3,7 @@ from lib.format_text import textf
 from mip import (
     OptimizationStatus,
     Model,
+    SearchEmphasis,
     BINARY,
     CONTINUOUS,
     minimize,
@@ -26,6 +27,9 @@ def run_instance(data, verbose=False):
         raise Exception('The input data must have the {} value'.format(ex))
 
     model = Model('energy_model')
+
+    model.threads = -1
+    model.emphasis = SearchEmphasis.OPTIMALITY
 
     if not verbose:
         model.verbose = 0
