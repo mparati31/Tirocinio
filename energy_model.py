@@ -6,12 +6,13 @@ from mip import (
     SearchEmphasis,
     BINARY,
     CONTINUOUS,
+    GUROBI,
     minimize,
     xsum
 )
 
 
-def run_instance(data, verbose=False):
+def run_instance(data, gap=4e-4, verbose=False):
     """Runs the energy model using the input data instance and returns
     a dictionary that contains all the variables and info about the solution.
 
@@ -26,13 +27,14 @@ def run_instance(data, verbose=False):
     except KeyError as ex:
         raise Exception('The input data must have the {} value'.format(ex))
 
-    model = Model('energy_model')
-
-    model.threads = -1
-    model.emphasis = SearchEmphasis.OPTIMALITY
+    model = Model('energy_model', solver_name=GUROBI)
 
     if not verbose:
         model.verbose = 0
+    model.threads = -1
+
+    model.max_mip_gap = gap
+    model.emphasis = SearchEmphasis.OPTIMALITY
 
     # Variables
 
@@ -83,6 +85,7 @@ def run_instance(data, verbose=False):
     ret = {
         'status': status,
         'obj_value': model.objective_value,
+        'obj_bound': model.objective_bound,
         'x': x,
         'y': y,
         'g': g,
@@ -102,6 +105,7 @@ def convert_result(result, nA, nK, nT):
     ret = dict()
     ret['status'] = result['status']
     ret['obj_value'] = result['obj_value']
+    ret['obj_bound'] = result['obj_bound']
 
     if not ret['status'] == OptimizationStatus.OPTIMAL and not ret['status'] == OptimizationStatus.FEASIBLE:
         return ret
